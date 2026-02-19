@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* MaintainX Design Tokens */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-secondary-hover: #edf0f2;
+  --color-bg-primary-accent: #f7fbff;
+  --color-bg-expressive-blue: #e7f3fe;
+  --color-bg-feedback-positive: #ecfdf7;
+  --color-bg-feedback-negative: #fef2f2;
+
+  --color-text-primary: #1e2429;
+  --color-text-secondary: #4d5a66;
+  --color-text-placeholder: #b5c0c9;
+  --color-text-informative: #246cff;
+  --color-text-positive: #027a65;
+  --color-text-negative: #ec4146;
+
+  --color-icon-secondary: #677888;
+  --color-stroke-default: #dadfe3;
+  --color-stroke-accent: #246cff;
+  --color-stroke-positive: #0dbf98;
+
+  --color-copilot-start: #6366f1;
+  --color-copilot-end: #3b82f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+}
+
+textarea::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
