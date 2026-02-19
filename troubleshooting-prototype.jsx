@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 const COLORS = {
   bgPrimary: "#ffffff",
   bgSecondary: "#f9fafb",
+  bgSecondaryHover: "#edf0f2",
   bgPrimaryAccent: "#f7fbff",
   bgExpressiveBlue: "#e7f3fe",
   bgFeedbackPositive: "#ecfdf7",
@@ -11,10 +12,13 @@ const COLORS = {
   textPrimary: "#1e2429",
   textSecondary: "#4d5a66",
   textPlaceholder: "#b5c0c9",
-  textInformative: "#004fa8",
+  textInformative: "#246cff",
   textPositive: "#027a65",
   textNegative: "#ec4146",
+  iconSecondary: "#677888",
   strokeDefault: "#dadfe3",
+  strokeAccent: "#246cff",
+  strokePositive: "#0dbf98",
   copilotGradientStart: "#6366f1",
   copilotGradientEnd: "#3b82f6",
 };
@@ -40,7 +44,7 @@ const CopilotOrb = ({ size = 24 }) => (
 );
 
 // ─── Icon Component ─────────────────────────────────────────────────────
-const Icon = ({ name, size = 24, color = COLORS.textSecondary }) => {
+const Icon = ({ name, size = 24, color = COLORS.iconSecondary }) => {
   const icons = {
     close: (
       <path d="M18 6L6 18M6 6l12 12" stroke={color} strokeWidth="2" strokeLinecap="round" />
@@ -137,139 +141,250 @@ const AssetAvatar = ({ size = 24 }) => (
   <div style={{
     width: size, height: size, borderRadius: RADIUS["2x"],
     border: `1px solid ${COLORS.strokeDefault}`,
-    background: `linear-gradient(135deg, #1e3a5f, #2563eb)`,
+    background: `linear-gradient(135deg, #f97316, #ea580c)`,
     display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
     overflow: "hidden",
   }}>
-    <Icon name="mechanical" size={size * 0.6} color="rgba(255,255,255,0.8)" />
+    <Icon name="mechanical" size={size * 0.6} color="rgba(255,255,255,0.9)" />
   </div>
 );
 
 // ─── Scenario Data ───────────────────────────────────────────────────────
+// All data sourced from: Kubota RTV-XG850 Operator's Manual (Code No. K7814-7121-2)
+// Engine: GZ8510 — 2 cylinder DOHC, 4-cycle, Liquid-cooled, EFI Gas, 851 cc
 const SCENARIO = {
   asset: {
-    name: "R 2475N7.5 Air Compressor",
-    id: "AC-2475-031",
-    location: "Bldg 3, Line 2 \u2014 Packaging",
-    lastPM: "2025-12-15",
+    name: "Kubota Sidekick RTV-XG850",
+    id: "RTV-XG850-0147",
+    location: "South Lot \u2014 Grounds Maintenance",
+    lastPM: "2026-01-20",
   },
   wo: {
-    number: "48291",
-    title: "Air compressor on Line 2 keeps tripping off",
-    description: "Air compressor on Line 2 keeps tripping off. Packaging machines losing pressure and slowing down the line.",
-    history: "2 thermal shutdowns in the past 6 months.",
+    number: "52408",
+    title: "RTV-XG850 engine overheating during operation",
+    description: "Operator reports the coolant temperature gauge entering the red zone during normal site transport. Vehicle was hauling moderate cargo load (~300 lbs) on flat terrain.",
+    history: "No previous overheating incidents. Last service at 480 hrs \u2014 engine oil change and air cleaner cleaning per 100-hour interval.",
   },
   intake: {
     questions: [
-      "Is the compressor shutting off completely, or running but not building pressure?",
-      "Any unusual noises, vibrations, or burning smell?",
-      "When did this start?",
+      "Does the engine overheat under load, at idle, or both?",
+      "Have you noticed any coolant leaks or puddles under the vehicle?",
+      "When did this start \u2014 was it sudden or gradual over several uses?",
     ],
-    defaultResponse: "It runs for about 10 minutes then shuts off. No weird smells. Started this morning.",
+    defaultResponse: "Mostly under load, but the gauge creeps up at idle too now. No puddles that I\u2019ve seen. Started yesterday \u2014 was fine last week.",
   },
   triage: {
-    message: "Sounds like thermal overload \u2014 this unit\u2019s tripped twice in the past 6 months for similar reasons. On these IR 2475s, that usually comes down to three things: the overload relay, oil and cooling, or something electrical.",
+    message: "Sounds like a cooling system issue. On the RTV-XG850, the manual lists six common causes for overheating \u2014 but they generally break down into three areas you can check first: coolant level, engine oil, and the radiator screen.",
     prompt: "Have you already looked into any of these?",
     checks: [
-      { id: "relay", label: "Reset the thermal overload relay", summary: "the relay reset" },
-      { id: "oil", label: "Checked oil level & cooling", summary: "oil and cooling" },
-      { id: "electrical", label: "Inspected electrical components", summary: "the electrical side" },
+      { id: "coolantLevel", label: "Checked coolant level in the recovery tank", summary: "coolant level" },
+      { id: "oilLevel", label: "Checked engine oil level on the dipstick", summary: "the engine oil" },
+      { id: "radiatorScreen", label: "Cleaned the radiator screen and grille", summary: "the radiator screen" },
     ],
     noneLabel: "Haven\u2019t tried any of these yet",
   },
   steps: [
+    /* ── Basic steps (triageable) ────────────────────────────── */
     {
-      id: "relay",
-      label: "Thermal reset",
-      analysis: "This unit\u2019s had 2 thermal overload trips in the past 6 months. WO #41873 had the same symptom and was resolved with a relay reset and oil top-off.",
-      recommendation: "Check the thermal overload relay on the motor starter panel. If it\u2019s tripped, reset it and let the compressor run for about 5 minutes to see if it holds.",
+      id: "coolantLevel",
+      label: "Coolant level & hoses",
+      analysis: "The most common cause of overheating on this engine is simply low coolant. The manual says to check the recovery tank \u2014 it should be between the FULL and LOW marks. Important: never remove the radiator cap while hot.",
+      recommendation: "Open the hood (see p. 55 of the operator\u2019s manual for the hood latch procedure). Check the coolant recovery tank \u2014 the level should be at or near the FULL mark when the engine is cool. If it\u2019s low, add a 50/50 mix of distilled water and antifreeze to the recovery tank (not the radiator). Also visually inspect the radiator hoses and clamp bands for any signs of leaks, swelling, or cracks.",
       sources: [
-        "IR 2475 Service Manual, \u00A78.3",
-        "WO #41873 \u2014 same symptom, resolved with reset + oil top-off",
+        "Operator\u2019s Manual, p. 60 \u2014 Checking coolant level",
+        "Operator\u2019s Manual, p. 75\u201376 \u2014 Checking radiator hose, pipe and clamp",
+        "Operator\u2019s Manual, p. 85\u201386 \u2014 Engine Troubleshooting: Engine overheats",
       ],
-      yesLabel: "Yes, it\u2019s running fine now.",
-      noLabel: "No, it tripped again.",
-      resolution: "Great \u2014 the thermal overload reset resolved the issue. I\u2019ve logged this to the work order. Keep an eye on it over the next few hours.",
+      yesLabel: "Coolant was low \u2014 topped it off and temp is stable now.",
+      noLabel: "Coolant level is fine, still overheating.",
+      resolution: "Low coolant was the root cause. Topped off the recovery tank with proper 50/50 coolant mix. I\u2019ve updated the work order and added a note to check for slow leaks at the next 100-hour service. Per the manual, coolant level should be checked as part of the daily pre-operation inspection (p. 57).",
     },
     {
-      id: "oil",
-      label: "Oil & cooling",
-      analysis: "I\u2019d check oil and cooling next. Last time this happened (WO #41873), low oil was causing the overheating.",
-      recommendation: "Check the oil sight glass \u2014 level should be between the min and max marks. Also take a look at the cooling fins and fan for any debris or blockage.",
+      id: "oilLevel",
+      label: "Engine oil level",
+      analysis: "Engine oil also plays a role in heat management. The manual specifically lists insufficient oil as a cause of overheating on this engine. The GZ8510 has an oil capacity of 2.1 L (2.2 U.S. quarts).",
+      recommendation: "With the engine off and the vehicle on a level surface, pull the dipstick, wipe it clean, reinsert fully, and pull again. The oil level should be within the acceptable range marked on the dipstick. If low, add SAE 10W-30 oil (see Lubricants, Fuel and Coolant table on p. 53). Do not overfill \u2014 the manual warns that excessive oil can also cause colored exhaust fumes.",
       sources: [
-        "IR 2475 Service Manual, \u00A75.2",
-        "WO #41873 \u2014 oil top-off resolved same issue 4 months ago",
+        "Operator\u2019s Manual, p. 59 \u2014 Checking engine oil level",
+        "Operator\u2019s Manual, p. 53 \u2014 Lubricants, Fuel and Coolant specifications",
+        "Operator\u2019s Manual, p. 85 \u2014 Engine Troubleshooting: Engine overheats \u2014 \u2018Engine oil is insufficient\u2019",
       ],
-      yesLabel: "Yes, oil was low. Topped off and running.",
-      noLabel: "No, oil is fine and still tripping.",
-      resolution: "Low oil was the root cause. I\u2019ve updated the PM schedule to include a bi-weekly oil check and logged this to the work order.",
+      yesLabel: "Oil was low \u2014 topped off, running cooler now.",
+      noLabel: "Oil level is fine, still overheating.",
+      resolution: "Low engine oil was contributing to overheating. Topped off with SAE 10W-30 per manual specs. I\u2019ve updated the PM schedule to flag oil checks and logged this to the work order. The manual recommends oil changes every 100 hours / 3000 km (p. 66).",
     },
     {
-      id: "electrical",
-      label: "Electrical",
-      analysis: "I\u2019m thinking electrical. WO #38102 on a similar unit had comparable symptoms and it turned out to be the contactor.",
-      recommendation: "Take a look at the motor starter contactor for any pitting or burn marks. If you have a multimeter handy, check the run capacitor \u2014 it should read within \u00B110% of the rated microfarads on the label.",
+      id: "radiatorScreen",
+      label: "Radiator screen & airflow",
+      analysis: "Debris buildup on the radiator screen and grille is one of the top causes the manual lists for overheating. On the RTV-XG850, the radiator is under the cargo bed, so it collects dirt, leaves, and grass clippings easily.",
+      recommendation: "Raise the cargo bed and mount the safety support (p. 56). Check the radiator screen and cooling fins \u2014 remove any accumulated debris, dirt, leaves, or grass. The manual specifically says to clean the radiator screen as part of the daily check (p. 60). Use compressed air or a soft brush to clean the fins. Be careful not to bend or damage the fins.",
       sources: [
-        "IR 2475 Service Manual, \u00A79.1",
-        "WO #38102 \u2014 similar symptoms, contactor replacement",
+        "Operator\u2019s Manual, p. 60 \u2014 Cleaning radiator screen",
+        "Operator\u2019s Manual, p. 86 \u2014 Engine Troubleshooting: Engine overheats \u2014 \u2018Dirty radiator core or grille screens\u2019",
       ],
-      yesLabel: "Found a burned contactor. Replacing it.",
-      noLabel: "Everything looks fine electrically.",
-      resolution: "Contactor failure confirmed. I\u2019ve created a parts request for a replacement and logged the diagnosis.",
+      yesLabel: "Found a lot of debris \u2014 cleaned it out, running much cooler.",
+      noLabel: "Radiator screen is clean, still overheating.",
+      resolution: "Blocked radiator screen was restricting airflow and causing the overheat. Cleaned all debris from the screen and cooling fins. I\u2019ve logged this to the work order and added a reminder: the manual says the radiator screen should be cleaned as part of every daily pre-operation check (p. 60).",
+    },
+    /* ── Deep diagnostic steps (always included) ─────────────── */
+    {
+      id: "coolingFan",
+      label: "Cooling fan & fuse",
+      deep: true,
+      analysis: "Since the basic checks look fine, let\u2019s go deeper. The manual lists \u2018motor driven fan does not turn\u2019 as a specific cause of overheating. If the electric cooling fan isn\u2019t running, the radiator can\u2019t dissipate heat effectively \u2014 especially at low speeds or idle.",
+      recommendation: "Start the engine and let it warm up. Watch the cooling fan through the radiator screen \u2014 it should kick on as the coolant temperature rises. If it doesn\u2019t spin, check the fuse first (the manual says to check if the fuse is blown, p. 86). Also check the electric system connections to the fan motor. The fuse box location and replacement procedure is on p. 80\u201381 of the manual.",
+      sources: [
+        "Operator\u2019s Manual, p. 86 \u2014 Engine Troubleshooting: \u2018The motor driven fan does not turn\u2019",
+        "Operator\u2019s Manual, p. 80\u201381 \u2014 Replacing fuse / Replacing slow-blow fuses",
+      ],
+      yesLabel: "Fan wasn\u2019t running \u2014 blown fuse. Replaced it, fan works now.",
+      noLabel: "Fan is spinning fine.",
+      resolution: "Blown cooling fan fuse was the root cause \u2014 the fan wasn\u2019t running, so the radiator couldn\u2019t dissipate heat. Replaced the fuse per the procedure on p. 80. I\u2019ve logged this and recommended checking the fan motor wiring at the next scheduled service to rule out an underlying short.",
+    },
+    {
+      id: "hoseInspection",
+      label: "Hose & clamp inspection",
+      deep: true,
+      analysis: "If the fan is fine, there could be a slow coolant leak that\u2019s not obvious at a glance. The manual has a full section on inspecting radiator hoses, pipe, and clamp bands for wear \u2014 this is a yearly service item but worth checking now.",
+      recommendation: "With the engine cool and the cargo bed raised, inspect all radiator hoses and clamp bands. The manual shows three hose connection points (see figures on p. 75\u201376). Look for: hose clamps that are loose or have water weeping around them, hoses that appear swollen, hardened, or cracked, and any signs of coolant spray or residue on nearby components. Tighten any loose clamp bands securely. Replace any damaged hoses.",
+      sources: [
+        "Operator\u2019s Manual, p. 75\u201376 \u2014 Checking radiator hose, pipe and clamp",
+        "Operator\u2019s Manual, p. 76 \u2014 Precaution at overheating",
+        "Operator\u2019s Manual, p. 80 \u2014 Replacing radiator hose (every 4 years)",
+      ],
+      yesLabel: "Found a loose clamp \u2014 tightened it, no more seeping.",
+      noLabel: "All hoses and clamps look solid.",
+      resolution: "A loose radiator hose clamp was allowing slow coolant loss under pressure. Tightened the clamp securely. I\u2019ve logged this to the work order and noted that the manual recommends replacing all radiator hoses every 4 years regardless of condition (p. 80).",
+    },
+    {
+      id: "coolantFlush",
+      label: "Coolant condition & flow",
+      deep: true,
+      analysis: "One last thing the manual lists \u2014 corroded coolant flow routes. If the coolant hasn\u2019t been changed according to schedule, internal corrosion and scale can restrict flow through the engine block and radiator, causing overheating even with a full system.",
+      recommendation: "Check when the coolant was last flushed \u2014 the manual requires a full cooling system flush and coolant change every 2 years (p. 78). Look at the coolant color and condition through the recovery tank \u2014 it should be clean green or orange (depending on type). If it\u2019s brown, rusty, or has particles, the system needs flushing. The full flush procedure involves draining via the drain plug and engine coolant breather, flushing with cleaner, then refilling with 50/50 antifreeze mix (p. 78\u201379).",
+      sources: [
+        "Operator\u2019s Manual, p. 78\u201379 \u2014 Flushing cooling system and changing coolant",
+        "Operator\u2019s Manual, p. 79 \u2014 Antifreeze specifications",
+        "Operator\u2019s Manual, p. 86 \u2014 Engine Troubleshooting: \u2018Coolant flow route corroded\u2019",
+      ],
+      yesLabel: "Coolant looks dirty / hasn\u2019t been flushed in over 2 years.",
+      noLabel: "Coolant looks clean, was flushed recently.",
+      resolution: "Degraded coolant was restricting flow and reducing cooling efficiency. Scheduled a full cooling system flush per the procedure on p. 78. I\u2019ve updated the work order and the PM schedule to ensure the 2-year coolant flush interval is tracked going forward.",
     },
   ],
   escalation: {
-    text: "I\u2019ve gone through the most likely causes based on the service history and manual for this unit. This might need hands-on diagnosis by someone who\u2019s worked on these before.",
+    text: "I\u2019ve gone through all the causes listed in the operator\u2019s manual for engine overheating on this RTV-XG850. This may need a deeper look at the engine internals \u2014 possibly a head gasket issue, thermostat failure, or water pump problem. The manual recommends consulting your KUBOTA Dealer for these items.",
     expert: {
-      name: "Mike Chen",
-      title: "Senior Compressor Technician",
+      name: "Jake Torres",
+      title: "Kubota Certified Technician",
       availability: "Available today",
     },
   },
+  redirects: [
+    {
+      id: "radiatorDamage",
+      triggers: /radiator.*(damage|crack|broken|dent|hole|bent|punctur)|damage.*radiator|(core|fin).*(bent|crush|damage)/i,
+      label: "Radiator physical damage",
+      analysis: "If the radiator core itself is physically damaged, that\u2019s a different issue from a blocked screen. A cracked, dented, or punctured radiator can\u2019t hold pressure or dissipate heat properly \u2014 no amount of cleaning will fix it.",
+      recommendation: "With the cargo bed raised (safety support in place per p. 56), inspect the radiator core closely. Look for dents or crush marks on the aluminum fins, cracks or punctures in the header tanks (top and bottom plastic pieces), and any signs of dried coolant residue which would indicate a slow pressure leak. A hairline crack may only weep under operating pressure. If you find physical damage, the radiator assembly will need to be replaced by your KUBOTA Dealer.",
+      sources: [
+        "Operator\u2019s Manual, p. 75\u201376 \u2014 Checking radiator hose, pipe and clamp",
+        "Operator\u2019s Manual, p. 86 \u2014 Engine Troubleshooting: Engine overheats",
+      ],
+      yesLabel: "Found damage \u2014 there\u2019s a crack in the radiator core.",
+      noLabel: "Radiator looks intact, no visible damage.",
+      resolution: "Physical radiator damage was the root cause. The radiator core has a crack that prevents it from holding coolant pressure and dissipating heat. I\u2019ve logged this finding to the work order and flagged it for radiator replacement by your KUBOTA Dealer. In the meantime, monitor coolant levels before each use and avoid sustained heavy loads.",
+    },
+    {
+      id: "thermostatStuck",
+      triggers: /thermostat.*(stuck|jam|fail|not open|broken|bad|gone)|stuck.*thermostat/i,
+      label: "Thermostat stuck or failed",
+      analysis: "Good thinking. The thermostat controls when coolant flows to the radiator. If it\u2019s stuck closed, coolant stays in the engine block and never reaches the radiator \u2014 the engine overheats even though the radiator and fan are fine.",
+      recommendation: "Start the engine and let it idle for 5\u201310 minutes until the temperature gauge starts rising. Then carefully feel the upper and lower radiator hoses. The upper hose should get hot first. Once the thermostat opens (usually around 180\u00b0F), the lower hose should also warm up noticeably. If the lower hose stays cool while the engine is clearly running hot, the thermostat is likely stuck closed. Thermostat inspection and replacement is covered on p. 77 of the manual \u2014 this requires draining the cooling system.",
+      sources: [
+        "Operator\u2019s Manual, p. 77 \u2014 Thermostat inspection and replacement",
+        "Operator\u2019s Manual, p. 86 \u2014 Engine Troubleshooting: Engine overheats",
+      ],
+      yesLabel: "Lower hose stays cool while engine is hot \u2014 thermostat is stuck.",
+      noLabel: "Both hoses warm up, thermostat seems fine.",
+      resolution: "Thermostat stuck in the closed position was the root cause. Coolant couldn\u2019t circulate to the radiator, so the engine had no way to shed heat. The thermostat needs to be replaced per the procedure on p. 77. I\u2019ve logged this to the work order and will coordinate replacement with your KUBOTA Dealer \u2014 this requires draining and refilling the cooling system.",
+    },
+    {
+      id: "waterPumpFailure",
+      triggers: /water.?pump.*(fail|broken|not work|not spin|seep|leak|bad|gone)|(pump|impeller).*(fail|stuck|damage|broken)|coolant.*(not circulat|no flow|won'?t flow)/i,
+      label: "Water pump failure",
+      analysis: "That\u2019s a serious possibility. The water pump drives coolant circulation through the entire system. If the pump bearing seizes or the impeller breaks, coolant sits still in the engine block and overheating happens fast \u2014 even with a full recovery tank and clean radiator.",
+      recommendation: "With the engine running at operating temperature, carefully feel both radiator hoses. If both stay relatively cool even though the engine gauge is high, coolant isn\u2019t being circulated \u2014 that points to the pump. Also look underneath the water pump housing for a small weep hole. If coolant is dripping from this hole, the pump\u2019s internal seal has failed. The pump is mounted to the engine block; replacement is covered on p. 81 and is a dealer-level service.",
+      sources: [
+        "Operator\u2019s Manual, p. 81 \u2014 Water pump service",
+        "Operator\u2019s Manual, p. 86 \u2014 Engine Troubleshooting: Engine overheats",
+      ],
+      yesLabel: "Both hoses stay cool and/or pump is leaking from the weep hole.",
+      noLabel: "Hoses warm up normally, pump seems fine.",
+      resolution: "Water pump failure was identified. The pump isn\u2019t circulating coolant, so the engine can\u2019t transfer heat to the radiator. This is an internal engine service requiring pump replacement per p. 81. I\u2019ve flagged this as urgent on the work order and will escalate to your KUBOTA Dealer for immediate repair. Do not run the engine until this is resolved.",
+    },
+    {
+      id: "headGasketLeak",
+      triggers: /head.?gasket.*(leak|fail|blow|gone|bad|suspect)|milky.*(oil|fluid|stuff)|oil.*(milky|creamy|foamy|white)|white.*(smoke|steam).*(exhaust|tailpipe|coming)|coolant.*(in.*oil|mix|disappear.*no.*leak)/i,
+      label: "Head gasket or internal leak",
+      analysis: "Those symptoms could point to a head gasket issue \u2014 one of the more serious causes of overheating. A failing head gasket lets coolant leak into the combustion chamber or oil passages. The telltale signs are milky oil, white exhaust smoke, or coolant that disappears without any visible external leak.",
+      recommendation: "Check the engine oil dipstick \u2014 if the oil looks milky, creamy, or lighter than normal, that\u2019s coolant contamination. Also check the underside of the oil filler cap for white foamy residue. Then start the engine and watch the exhaust closely: persistent white smoke or steam (not just normal warm-up condensation) indicates coolant is burning in the combustion chamber. If you see any of these signs, shut down immediately \u2014 continued operation can cause catastrophic engine damage.",
+      sources: [
+        "Operator\u2019s Manual, p. 59 \u2014 Checking engine oil (contamination check)",
+        "Operator\u2019s Manual, p. 85\u201386 \u2014 Engine Troubleshooting: Engine overheats",
+      ],
+      yesLabel: "Oil is milky or there\u2019s white smoke from the exhaust.",
+      noLabel: "Oil looks clean, no white smoke.",
+      resolution: "Head gasket failure is suspected based on the symptoms. Coolant is leaking into the engine internals, which means continued operation risks severe engine damage. I\u2019ve flagged this as CRITICAL on the work order and will escalate immediately to your KUBOTA Dealer. The vehicle should not be operated until a full teardown and gasket replacement is completed.",
+    },
+  ],
 };
 
 // ─── Source Data ──────────────────────────────────────────────────────────
 const SOURCE_DATA = {
   files: [
     {
-      name: "IR_2475_Service_Manual.pdf",
+      name: "Kubota_RTV-XG850_Operators_Manual.pdf",
       sections: [
-        { ref: "\u00A78.3 \u2014 Thermal Overload Protection", pages: "pp. 142\u2013148" },
-        { ref: "\u00A75.2 \u2014 Lubrication System", pages: "pp. 87\u201394" },
-        { ref: "\u00A79.1 \u2014 Electrical Components", pages: "pp. 156\u2013163" },
+        { ref: "pp. 85\u201386 \u2014 Engine Troubleshooting", pages: "Causes & countermeasures table" },
+        { ref: "p. 60 \u2014 Checking coolant level", pages: "Daily check procedure" },
+        { ref: "p. 59 \u2014 Checking engine oil level", pages: "Dipstick procedure" },
+        { ref: "pp. 75\u201376 \u2014 Radiator hose inspection", pages: "Yearly service" },
+        { ref: "pp. 78\u201379 \u2014 Flushing cooling system", pages: "Every 2 years" },
       ],
     },
     {
-      name: "IR_2475_Quick_Start_Guide.pdf",
+      name: "Kubota_RTV-XG850_Spec_Sheet.pdf",
       sections: [
-        { ref: "Troubleshooting Checklist", pages: "pp. 10\u201314" },
-        { ref: "Oil Level Check", pages: "p. 12" },
+        { ref: "Engine: GZ8510, 851cc 2-cyl DOHC EFI", pages: "Specification table" },
+        { ref: "Coolant system capacity", pages: "p. 53" },
+        { ref: "Recommended lubricants & fluids", pages: "p. 53" },
       ],
     },
   ],
   workOrders: [
     {
-      number: "41873",
-      title: "Thermal shutdown \u2014 oil top-off",
-      date: "4 months ago",
+      number: "49312",
+      title: "100-hr service \u2014 oil change & air cleaner",
+      date: "5 weeks ago",
       assignee: "J. Torres",
       summary: {
-        diagnosis: "Compressor tripping on thermal overload after 15 min run time. Oil sight glass showed level below minimum mark.",
-        repairs: ["Topped off compressor oil (SAE 30)", "Cleaned cooling fins", "Reset thermal overload"],
-        status: "Resolved \u2014 unit ran 8 hrs post-repair without issue",
-        recommendations: ["Add oil check to weekly PM", "Monitor run temps for 30 days"],
+        diagnosis: "Routine 100-hour service. Engine oil changed, air cleaner primary element cleaned. All fluid levels checked and within spec.",
+        repairs: ["Changed engine oil (SAE 10W-30, 2.1 L)", "Cleaned air cleaner primary element", "Checked CVT belt condition \u2014 no wear", "Greased all fittings per service chart"],
+        status: "Completed \u2014 all items within spec",
+        recommendations: ["Next oil change at 580 hrs", "Air cleaner secondary element due for replacement at 1000 hrs"],
       },
     },
     {
-      number: "38102",
-      title: "Unloader valve replacement",
-      date: "8 months ago",
-      assignee: "M. Chen",
+      number: "47801",
+      title: "Radiator screen cleaning \u2014 temp running warm",
+      date: "3 months ago",
+      assignee: "M. Rivera",
       summary: {
-        diagnosis: "Compressor not unloading between cycles. Pressure building above cutoff.",
-        repairs: ["Replaced unloader valve assembly", "Calibrated pressure switch"],
-        status: "Resolved",
-        recommendations: ["Inspect unloader valve at 6-month intervals"],
+        diagnosis: "Operator reported temperature gauge slightly above normal during extended use. Found radiator screen heavily clogged with grass and dirt from mowing operations.",
+        repairs: ["Cleaned radiator screen and cooling fins", "Cleaned radiator grille", "Verified coolant level \u2014 was at FULL mark", "Checked all hose clamps \u2014 secure"],
+        status: "Resolved \u2014 temperature returned to normal range after cleaning",
+        recommendations: ["Increase radiator screen cleaning frequency to daily during mowing season", "Monitor coolant temp gauge during heavy use"],
       },
     },
   ],
@@ -471,11 +586,13 @@ const Header = ({ onClose }) => (
         {SCENARIO.asset.name}
       </div>
     </div>
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <HeaderIconButton icon="comments" badge={2} />
-      <HeaderIconButton icon="question" />
-      <HeaderIconButton icon="close" onClick={onClose} />
-    </div>
+    <button onClick={onClose} style={{
+      padding: `${SPACING.xs}px ${SPACING.sm}px`, background: "none",
+      border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+      color: COLORS.textSecondary, borderRadius: RADIUS["1x"],
+    }}>
+      Reset
+    </button>
   </div>
 );
 
@@ -571,7 +688,7 @@ const ActionPill = ({ icon, label, onClick }) => {
       }}>
         <Icon name={icon} size={20} color={COLORS.textInformative} />
       </div>
-      <span style={{ fontSize: 16, fontWeight: 600, color: COLORS.textInformative, lineHeight: "24px", whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.textInformative, lineHeight: "24px", whiteSpace: "nowrap" }}>
         {label}
       </span>
     </button>
@@ -633,10 +750,10 @@ const SourcesButton = ({ onClick }) => {
         <div style={{
           width: 24, height: 24, borderRadius: RADIUS.full, marginRight: -4,
           border: `1px solid ${COLORS.strokeDefault}`, overflow: "hidden",
-          background: `linear-gradient(135deg, #1e3a5f, #2563eb)`,
+          background: `linear-gradient(135deg, #f97316, #ea580c)`,
           display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3,
         }}>
-          <Icon name="file" size={14} color="rgba(255,255,255,0.8)" />
+          <Icon name="file" size={14} color="rgba(255,255,255,0.9)" />
         </div>
         <div style={{
           width: 24, height: 24, borderRadius: RADIUS.full, marginRight: -4,
@@ -691,33 +808,39 @@ const UserMessage = ({ text, isNew = false }) => {
 const TroubleshootingCard = ({ recommendation, sources = [] }) => (
   <div style={{ padding: `0 ${SPACING.md}px` }}>
     <div style={{
-      background: COLORS.bgPrimaryAccent, borderRadius: RADIUS["2x"],
-      padding: SPACING.md, display: "flex", flexDirection: "column", gap: SPACING.md,
+      background: COLORS.bgPrimary, border: `1px solid ${COLORS.strokeDefault}`,
+      borderRadius: RADIUS["2x"], padding: SPACING.md,
+      display: "flex", flexDirection: "column", gap: SPACING.md,
     }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: SPACING.xxs }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.textSecondary, lineHeight: "18px" }}>
-          Recommended action
+      <div style={{ display: "flex", flexDirection: "column", gap: SPACING.sm }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <Icon name="mechanical" size={24} color={COLORS.iconSecondary} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.textPrimary, lineHeight: "20px" }}>
+            Recommended next steps
+          </span>
         </div>
-        <div style={{ fontSize: 14, lineHeight: "20px", color: COLORS.textPrimary }}>
+        <div style={{ fontSize: 16, lineHeight: "24px", color: COLORS.textPrimary }}>
           {recommendation}
         </div>
       </div>
       {sources.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: SPACING.xs }}>
-          {sources.map((s, i) => (
-            <div key={i} style={{
-              display: "inline-flex", alignSelf: "flex-start",
-              padding: `3px ${SPACING.xs}px`,
-              background: COLORS.bgExpressiveBlue, borderRadius: RADIUS["1x"],
-            }}>
-              <span style={{
-                fontSize: 12, fontWeight: 600, color: COLORS.textInformative,
-                lineHeight: "18px", padding: "0 2px",
+        <div style={{ display: "flex", alignItems: "center", gap: SPACING.xs }}>
+          <div style={{ display: "flex", alignItems: "center", paddingRight: 4 }}>
+            {sources.slice(0, 2).map((_, i) => (
+              <div key={i} style={{
+                width: 24, height: 24, borderRadius: RADIUS.full, marginRight: -4,
+                border: `1px solid ${COLORS.strokeDefault}`, overflow: "hidden",
+                background: `linear-gradient(135deg, #f97316, #ea580c)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                zIndex: 3 - i,
               }}>
-                {s}
-              </span>
-            </div>
-          ))}
+                <Icon name="file" size={14} color="rgba(255,255,255,0.9)" />
+              </div>
+            ))}
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 600, color: COLORS.textSecondary, lineHeight: "12px" }}>
+            {sources[0]}{sources.length > 1 ? `, +${sources.length - 1}` : ""}
+          </span>
         </div>
       )}
     </div>
@@ -727,27 +850,19 @@ const TroubleshootingCard = ({ recommendation, sources = [] }) => (
 // ─── Resolution Prompt ───────────────────────────────────────────────────
 const ResolutionPrompt = ({ yesLabel, noLabel, onYes, onNo }) => (
   <div style={{
-    display: "flex", flexDirection: "column", gap: SPACING.md,
+    display: "flex", flexDirection: "column", gap: SPACING.xs,
     padding: `0 ${SPACING.md}px`,
   }}>
-    <div style={{
-      fontSize: 14, lineHeight: "20px", color: COLORS.textPrimary, textAlign: "center",
-    }}>
-      Did this resolve the issue?
-    </div>
-    <div style={{ display: "flex", flexDirection: "column", gap: SPACING.xs }}>
-      <ResolutionChip type="positive" label={yesLabel} onClick={onYes} />
-      <ResolutionChip type="negative" label={noLabel} onClick={onNo} />
-    </div>
+    <ResolutionChip type="positive" label={yesLabel} onClick={onYes} />
+    <ResolutionChip type="negative" label={noLabel} onClick={onNo} />
   </div>
 );
 
 const ResolutionChip = ({ type, label, onClick }) => {
   const [hovered, setHovered] = useState(false);
   const isPositive = type === "positive";
-  const bg = isPositive ? COLORS.bgFeedbackPositive : COLORS.bgFeedbackNegative;
-  const color = isPositive ? COLORS.textPositive : COLORS.textNegative;
   const iconName = isPositive ? "check" : "close";
+  const iconColor = isPositive ? COLORS.textPositive : COLORS.iconSecondary;
 
   return (
     <button
@@ -755,20 +870,21 @@ const ResolutionChip = ({ type, label, onClick }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: "inline-flex", alignItems: "center", alignSelf: "flex-start",
-        padding: SPACING.xs, background: bg, border: "none",
+        display: "flex", alignItems: "center", width: "100%",
+        padding: SPACING.sm, background: hovered ? COLORS.bgSecondary : COLORS.bgPrimary,
+        border: `1px solid ${COLORS.strokeDefault}`,
         borderRadius: RADIUS["1x"], cursor: "pointer",
-        opacity: hovered ? 0.85 : 1, transition: "opacity 0.15s ease",
+        transition: "background 0.15s ease",
       }}
     >
       <div style={{
         width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <Icon name={iconName} size={20} color={color} />
+        <Icon name={iconName} size={20} color={iconColor} />
       </div>
       <span style={{
-        fontSize: 14, fontWeight: 600, color, lineHeight: "20px",
-        padding: `0 ${SPACING.xs}px`,
+        fontSize: 14, fontWeight: 400, color: COLORS.textPrimary, lineHeight: "20px",
+        padding: `0 ${SPACING.xs}px`, textAlign: "left",
       }}>
         {label}
       </span>
@@ -850,7 +966,7 @@ const EscalationCard = ({ expert, onRequest }) => (
         width: "100%", padding: "10px 16px",
         background: COLORS.textInformative, color: "#fff",
         border: "none", borderRadius: RADIUS["2x"],
-        fontSize: 14, fontWeight: 600, cursor: "pointer",
+        fontSize: 14, fontWeight: 700, cursor: "pointer",
       }}>
         Request assistance
       </button>
@@ -862,7 +978,7 @@ const EscalationCard = ({ expert, onRequest }) => (
 const SessionSummary = ({ stepsAttempted, resolution }) => (
   <div style={{ padding: `0 ${SPACING.md}px` }}>
     <div style={{
-      background: COLORS.bgSecondary, borderRadius: RADIUS["2x"],
+      background: COLORS.bgPrimary, borderRadius: RADIUS["2x"],
       border: `1px solid ${COLORS.strokeDefault}`, padding: SPACING.md,
     }}>
       <div style={{
@@ -923,7 +1039,7 @@ const TriageChecklist = ({ checks, noneLabel, onSubmit }) => {
             padding: "8px 20px",
             background: COLORS.textInformative, color: "#fff",
             border: "none", borderRadius: RADIUS.full,
-            fontSize: 14, fontWeight: 600, cursor: "pointer",
+            fontSize: 14, fontWeight: 700, cursor: "pointer",
           }}>
             Continue
           </button>
@@ -1008,38 +1124,7 @@ const InputBar = ({ value, onChange, onSubmit, placeholder = "Ask CoPilot", disa
         rows={1}
       />
     </div>
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-        <InputToolbarButton icon="mic" />
-        <InputToolbarButton icon="image" />
-        <div style={{
-          display: "flex", alignItems: "center", gap: 4,
-          padding: `${SPACING.xs}px ${SPACING.sm}px`,
-          borderRadius: RADIUS.full, cursor: "pointer",
-        }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <div style={{
-              width: 20, height: 20, borderRadius: RADIUS.full, marginRight: -3,
-              background: `linear-gradient(135deg, #1e3a5f, #2563eb)`,
-              border: `1px solid ${COLORS.strokeDefault}`,
-              display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
-            }}>
-              <Icon name="file" size={11} color="rgba(255,255,255,0.8)" />
-            </div>
-            <div style={{
-              width: 20, height: 20, borderRadius: RADIUS.full,
-              background: COLORS.bgExpressiveBlue,
-              border: `1px solid ${COLORS.strokeDefault}`,
-              display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1,
-            }}>
-              <Icon name="workOrder" size={11} color={COLORS.textInformative} />
-            </div>
-          </div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.textSecondary }}>
-            All sources
-          </span>
-        </div>
-      </div>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
       <button onClick={onSubmit} disabled={disabled || !value.trim()} style={{
         width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
         background: "none", border: "none", cursor: value.trim() ? "pointer" : "default",
@@ -1105,6 +1190,7 @@ export default function TroubleshootingPrototype() {
   const [sourcesModalOpen, setSourcesModalOpen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [showEscalation, setShowEscalation] = useState(false);
+  const [injectedStep, setInjectedStep] = useState(null);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -1127,6 +1213,7 @@ export default function TroubleshootingPrototype() {
     setSourcesModalOpen(false);
     setShowSummary(false);
     setShowEscalation(false);
+    setInjectedStep(null);
   };
 
   const addTypingThen = (callback, delay = 1200) => {
@@ -1161,6 +1248,97 @@ export default function TroubleshootingPrototype() {
     }, 1500);
   };
 
+  // Free-form message during any phase — CoPilot reacts contextually
+  const buildFreeformReply = (text) => {
+    const lower = text.toLowerCase();
+    const step = getCurrentStep();
+    const stepLabel = step ? step.label.toLowerCase() : "the current step";
+
+    // User is reporting an observation or finding
+    if (/leak|drip|puddle|seep|wet|spray|residue|stain/.test(lower)) {
+      return `That\u2019s a useful observation \u2014 a leak would definitely contribute to overheating. Make a note of where you\u2019re seeing it. For now let\u2019s finish checking ${stepLabel} since it\u2019ll help narrow down whether the leak is the primary cause or a secondary symptom.`;
+    }
+    if (/noise|sound|knock|rattle|squeal|grind|whine|hum|vibrat/.test(lower)) {
+      return `Unusual sounds can be a big clue. ${step ? `While you\u2019re working on ${stepLabel}, pay attention to whether the noise changes` : "Note when it happens"} \u2014 that\u2019ll help us correlate it. Let\u2019s keep going with the current check.`;
+    }
+    if (/smell|smoke|steam|fume|burning|hot/.test(lower)) {
+      return `Good catch \u2014 that could indicate a coolant or oil leak hitting a hot surface. If you\u2019re seeing active steam or smoke, let the engine cool fully before continuing. Otherwise, let\u2019s proceed with ${stepLabel} \u2014 it may reveal the source.`;
+    }
+    if (/notice|found|see|looks like|there\u2019s|spotted|i see/.test(lower)) {
+      return `Noted \u2014 I\u2019ll factor that in. Let\u2019s continue with ${stepLabel} and see if it connects.`;
+    }
+
+    // User is asking for help / how-to
+    if (/where (is|are|do)|how (do|can|should)|what tool|which/.test(lower)) {
+      if (step && step.sources && step.sources.length > 0) {
+        const pageRef = step.sources[0].match(/p\.\s*[\d\u2013\-]+/);
+        return `Good question. The operator\u2019s manual covers this \u2014 ${pageRef ? `check ${pageRef[0]}` : "see the reference listed on the action card"}. The procedure on the card above should walk you through it step by step.`;
+      }
+      return `The action card above has the procedure. If you need the exact page reference, check the sources linked at the bottom of the card.`;
+    }
+
+    // User wants to skip or change direction
+    if (/skip|next|move on|something else|different|not (the|this)|wrong track/.test(lower)) {
+      return `Understood. If you\u2019re confident ${stepLabel} isn\u2019t the issue, select the \u201Cstill overheating\u201D option below and I\u2019ll move to the next diagnostic step.`;
+    }
+
+    // User is confirming / done with the step
+    if (/^(done|ok|okay|got it|checked|finished|yep|yes|affirmative|completed)\.?$/i.test(lower) || /i('ve| have) (done|checked|finished|completed)/.test(lower)) {
+      return `Great \u2014 did that resolve the overheating? Use the options below to let me know and I\u2019ll either close this out or move to the next check.`;
+    }
+
+    // User mentions a specific component — relate it back
+    if (/fan|fuse|electric/.test(lower)) {
+      return `The cooling fan is on our diagnostic list. ${step && step.id !== "coolingFan" ? `Let\u2019s finish ${stepLabel} first \u2014 if that doesn\u2019t resolve it, we\u2019ll check the fan and its fuse next.` : "That\u2019s exactly what we\u2019re looking at now \u2014 follow the steps on the card above."}`;
+    }
+    if (/hose|clamp|band/.test(lower)) {
+      return `Hose and clamp inspection is part of the diagnostic path. ${step && step.id !== "hoseInspection" ? `We\u2019ll get to that \u2014 let\u2019s finish ${stepLabel} first to rule it out systematically.` : "That\u2019s the current step \u2014 check all three connection points shown in the manual."}`;
+    }
+    if (/coolant|antifreeze|reservoir|recovery tank/.test(lower)) {
+      return `${step && step.id === "coolantLevel" ? "Right \u2014 that\u2019s what we\u2019re checking now. The recovery tank should read between FULL and LOW when cool." : `Coolant is definitely relevant here. Let\u2019s finish ${stepLabel} first, then we can circle back if needed.`}`;
+    }
+    if (/oil|dipstick/.test(lower)) {
+      return `${step && step.id === "oilLevel" ? "Exactly \u2014 pull the dipstick on a level surface with the engine off. Oil level should be within the marked range." : `Oil level is on the list. Let\u2019s work through ${stepLabel} first.`}`;
+    }
+
+    // Default — acknowledge and redirect
+    return `Noted. ${step ? `Let\u2019s keep working through ${stepLabel} \u2014 once you\u2019ve completed the check, use the options below to tell me the result.` : "Let me know how I can help."}`;
+  };
+
+  const handleFreeformSubmit = () => {
+    const text = inputValue.trim();
+    if (!text) return;
+    setInputValue("");
+    const ts = Date.now();
+    setMessages(prev => [...prev, { type: "user", key: `freeform-${ts}`, text, isNew: true }]);
+
+    // Check for redirect triggers (only during troubleshooting phase)
+    if (phase === "troubleshooting") {
+      const match = SCENARIO.redirects.find(r => r.triggers.test(text));
+      if (match) {
+        addTypingThen(() => {
+          setInjectedStep(match);
+          setShowResolution(true);
+          setMessages(prev => [
+            ...prev,
+            { type: "copilot-analysis", key: `analysis-redirect-${match.id}`, text: match.analysis, isNew: true },
+            { type: "action-card", key: `card-redirect-${match.id}`, step: match, isNew: true },
+          ]);
+        }, 1200);
+        return;
+      }
+    }
+
+    // No redirect — standard freeform reply
+    const reply = buildFreeformReply(text);
+    addTypingThen(() => {
+      setMessages(prev => [
+        ...prev,
+        { type: "copilot-text", key: `freeform-reply-${ts}`, text: reply, isNew: true },
+      ]);
+    }, 1200);
+  };
+
   // Handle triage checklist submission
   const handleTriageSubmit = (checked) => {
     setTriageChecked(checked);
@@ -1177,9 +1355,9 @@ export default function TroubleshootingPrototype() {
       if (summaries.length === SCENARIO.triage.checks.length) {
         responseText = "Already checked all of these. Nothing resolved it.";
       } else if (summaries.length === 1) {
-        responseText = "Already tried " + summaries[0] + ". Still having the issue.";
+        responseText = "Already tried " + summaries[0] + ". Still overheating.";
       } else {
-        responseText = "Already tried " + summaries.slice(0, -1).join(", ") + " and " + summaries[summaries.length - 1] + ". Still having the issue.";
+        responseText = "Already tried " + summaries.slice(0, -1).join(", ") + " and " + summaries[summaries.length - 1] + ". Still overheating.";
       }
     }
 
@@ -1213,7 +1391,7 @@ export default function TroubleshootingPrototype() {
           .filter(s => effectiveChecked.has(s.id))
           .map(s => s.label.toLowerCase());
         if (checkedLabels.length === 1) {
-          analysisText = "Good, you\u2019ve already tried " + checkedLabels[0] + ". ";
+          analysisText = "Good, you\u2019ve already checked " + checkedLabels[0] + ". ";
         } else {
           analysisText = "Good, you\u2019ve already ruled out " + checkedLabels.slice(0, -1).join(", ") + " and " + checkedLabels[checkedLabels.length - 1] + ". ";
         }
@@ -1237,61 +1415,99 @@ export default function TroubleshootingPrototype() {
   };
 
   const handleYes = () => {
-    const stepIndex = remainingSteps[currentGuidePos];
-    const step = SCENARIO.steps[stepIndex];
     setShowResolution(false);
-    setMessages(prev => [
-      ...prev,
-      { type: "user-choice", key: `choice-yes-${stepIndex}`, text: step.yesLabel, positive: true },
-    ]);
 
-    addTypingThen(() => {
-      setResolutionText(step.resolution);
+    if (injectedStep) {
+      const step = injectedStep;
       setMessages(prev => [
         ...prev,
-        { type: "copilot-text", key: `resolution-${stepIndex}`, text: step.resolution, isNew: true },
+        { type: "user-choice", key: `choice-yes-${step.id}`, text: step.yesLabel, positive: true },
       ]);
-      setTimeout(() => setShowSummary(true), 500);
-    }, 1000);
+      setInjectedStep(null);
+      addTypingThen(() => {
+        setResolutionText(step.resolution);
+        setMessages(prev => [
+          ...prev,
+          { type: "copilot-text", key: `resolution-${step.id}`, text: step.resolution, isNew: true },
+        ]);
+        setTimeout(() => setShowSummary(true), 500);
+      }, 1000);
+    } else {
+      const stepIndex = remainingSteps[currentGuidePos];
+      const step = SCENARIO.steps[stepIndex];
+      setMessages(prev => [
+        ...prev,
+        { type: "user-choice", key: `choice-yes-${stepIndex}`, text: step.yesLabel, positive: true },
+      ]);
+      addTypingThen(() => {
+        setResolutionText(step.resolution);
+        setMessages(prev => [
+          ...prev,
+          { type: "copilot-text", key: `resolution-${stepIndex}`, text: step.resolution, isNew: true },
+        ]);
+        setTimeout(() => setShowSummary(true), 500);
+      }, 1000);
+    }
   };
 
   const handleNo = () => {
-    const stepIndex = remainingSteps[currentGuidePos];
-    const step = SCENARIO.steps[stepIndex];
     setShowResolution(false);
-    setMessages(prev => [
-      ...prev,
-      { type: "user-choice", key: `choice-no-${stepIndex}`, text: step.noLabel, positive: false },
-    ]);
 
-    const nextGuidePos = currentGuidePos + 1;
-    if (nextGuidePos < remainingSteps.length) {
-      const nextStepIndex = remainingSteps[nextGuidePos];
-      const nextStep = SCENARIO.steps[nextStepIndex];
-
+    if (injectedStep) {
+      // User rejected the injected branch — return to main flow
+      const step = injectedStep;
+      const mainStep = SCENARIO.steps[remainingSteps[currentGuidePos]];
+      setMessages(prev => [
+        ...prev,
+        { type: "user-choice", key: `choice-no-${step.id}`, text: step.noLabel, positive: false },
+      ]);
+      setInjectedStep(null);
       addTypingThen(() => {
-        setCurrentGuidePos(nextGuidePos);
-        setStepsAttempted(prev => [...prev, nextStep.label]);
         setShowResolution(true);
         setMessages(prev => [
           ...prev,
-          { type: "copilot-analysis", key: `analysis-${nextStepIndex}`, text: nextStep.analysis, isNew: true },
-          { type: "action-card", key: `card-${nextStepIndex}`, stepIndex: nextStepIndex, isNew: true },
+          { type: "copilot-text", key: `transition-${step.id}`, text: `Good \u2014 we can rule that out. Let\u2019s continue where we left off with ${mainStep.label.toLowerCase()}.`, isNew: true },
         ]);
-      }, 1500);
+      }, 1200);
     } else {
-      // No more steps — escalate
-      addTypingThen(() => {
-        setMessages(prev => [
-          ...prev,
-          { type: "copilot-text", key: "escalation-text", text: SCENARIO.escalation.text, isNew: true },
-        ]);
-        setTimeout(() => setShowEscalation(true), 400);
-      }, 1500);
+      // Normal flow — advance to next step
+      const stepIndex = remainingSteps[currentGuidePos];
+      const step = SCENARIO.steps[stepIndex];
+      setMessages(prev => [
+        ...prev,
+        { type: "user-choice", key: `choice-no-${stepIndex}`, text: step.noLabel, positive: false },
+      ]);
+
+      const nextGuidePos = currentGuidePos + 1;
+      if (nextGuidePos < remainingSteps.length) {
+        const nextStepIndex = remainingSteps[nextGuidePos];
+        const nextStep = SCENARIO.steps[nextStepIndex];
+
+        addTypingThen(() => {
+          setCurrentGuidePos(nextGuidePos);
+          setStepsAttempted(prev => [...prev, nextStep.label]);
+          setShowResolution(true);
+          setMessages(prev => [
+            ...prev,
+            { type: "copilot-analysis", key: `analysis-${nextStepIndex}`, text: nextStep.analysis, isNew: true },
+            { type: "action-card", key: `card-${nextStepIndex}`, stepIndex: nextStepIndex, isNew: true },
+          ]);
+        }, 1500);
+      } else {
+        // No more steps — escalate
+        addTypingThen(() => {
+          setMessages(prev => [
+            ...prev,
+            { type: "copilot-text", key: "escalation-text", text: SCENARIO.escalation.text, isNew: true },
+          ]);
+          setTimeout(() => setShowEscalation(true), 400);
+        }, 1500);
+      }
     }
   };
 
   const getCurrentStep = () => {
+    if (injectedStep) return injectedStep;
     if (remainingSteps.length > 0 && currentGuidePos < remainingSteps.length) {
       return SCENARIO.steps[remainingSteps[currentGuidePos]];
     }
@@ -1336,39 +1552,19 @@ export default function TroubleshootingPrototype() {
           </CoPilotMessage>
         );
 
-      case "action-card":
+      case "action-card": {
+        const cardStep = msg.step || SCENARIO.steps[msg.stepIndex];
         return (
           <TroubleshootingCard
             key={msg.key}
-            recommendation={SCENARIO.steps[msg.stepIndex].recommendation}
-            sources={SCENARIO.steps[msg.stepIndex].sources}
+            recommendation={cardStep.recommendation}
+            sources={cardStep.sources}
           />
         );
+      }
 
       case "user-choice":
-        return (
-          <div key={msg.key} style={{
-            display: "flex", justifyContent: "flex-start",
-            padding: `0 ${SPACING.md}px`,
-          }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center",
-              padding: SPACING.xs,
-              background: msg.positive ? COLORS.bgFeedbackPositive : COLORS.bgFeedbackNegative,
-              borderRadius: RADIUS["1x"], opacity: 0.7,
-            }}>
-              <div style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon name={msg.positive ? "check" : "close"} size={20} color={msg.positive ? COLORS.textPositive : COLORS.textNegative} />
-              </div>
-              <span style={{
-                fontSize: 14, fontWeight: 600, padding: `0 ${SPACING.xs}px`,
-                color: msg.positive ? COLORS.textPositive : COLORS.textNegative,
-              }}>
-                {msg.text}
-              </span>
-            </div>
-          </div>
-        );
+        return <UserMessage key={msg.key} text={msg.text} isNew={msg.isNew} />;
 
       case "copilot-text":
         return (
@@ -1386,12 +1582,10 @@ export default function TroubleshootingPrototype() {
 
   return (
     <div style={{
-      width: 402, height: 874, background: COLORS.bgPrimary,
+      width: "100%", height: "100vh", background: COLORS.bgPrimary,
       display: "flex", flexDirection: "column", position: "relative",
       fontFamily: "-apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif",
-      overflow: "hidden", borderRadius: 20,
-      boxShadow: "0 8px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)",
-      margin: "0 auto",
+      overflow: "hidden", margin: "0 auto",
     }}>
       <GlobalStyles />
 
@@ -1455,8 +1649,7 @@ export default function TroubleshootingPrototype() {
       <InputBar
         value={inputValue}
         onChange={setInputValue}
-        onSubmit={phase === "intake" ? handleIntakeSubmit : () => {}}
-        disabled={phase !== "intake" && phase !== "start"}
+        onSubmit={phase === "intake" ? handleIntakeSubmit : handleFreeformSubmit}
         placeholder={phase === "intake" ? "Describe what\u2019s happening\u2026" : "Ask CoPilot"}
       />
 
