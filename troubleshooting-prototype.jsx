@@ -696,7 +696,7 @@ const ActionPill = ({ icon, label, onClick }) => {
 };
 
 // ─── CoPilot Message ─────────────────────────────────────────────────────
-const CoPilotMessage = ({ children, onSourcesClick, isNew = false }) => {
+const CoPilotMessage = ({ children, isNew = false }) => {
   const [visible, setVisible] = useState(!isNew);
   useEffect(() => {
     if (isNew) {
@@ -708,72 +708,20 @@ const CoPilotMessage = ({ children, onSourcesClick, isNew = false }) => {
   return (
     <div style={{
       display: "flex", flexDirection: "column", gap: SPACING.sm,
-      padding: `0 ${SPACING.md}px`,
+      padding: `0 ${SPACING.md}px`, maxWidth: 600,
       opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(8px)",
       transition: "opacity 0.3s ease, transform 0.3s ease",
     }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: SPACING.xs }}>
-          <CopilotOrb size={24} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.textPrimary, lineHeight: "20px" }}>
-            CoPilot
-          </span>
-        </div>
-        {onSourcesClick && <SourcesButton onClick={onSourcesClick} />}
+      <div style={{ display: "flex", alignItems: "center", gap: SPACING.xs }}>
+        <CopilotOrb size={24} />
+        <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.textPrimary, lineHeight: "20px" }}>
+          CoPilot
+        </span>
       </div>
       <div style={{ fontSize: 14, lineHeight: "20px", color: COLORS.textPrimary }}>
         {children}
       </div>
     </div>
-  );
-};
-
-const SourcesButton = ({ onClick }) => {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex", alignItems: "center", gap: 0,
-        padding: `${SPACING.xs}px ${SPACING.sm}px`,
-        background: hovered ? COLORS.bgSecondary : "none",
-        border: "none", borderRadius: RADIUS.full, cursor: "pointer",
-        transition: "background 0.15s ease",
-      }}
-    >
-      <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.textSecondary, padding: "0 4px" }}>
-        Sources
-      </span>
-      <div style={{ display: "flex", alignItems: "center", paddingRight: 4 }}>
-        <div style={{
-          width: 24, height: 24, borderRadius: RADIUS.full, marginRight: -4,
-          border: `1px solid ${COLORS.strokeDefault}`, overflow: "hidden",
-          background: `linear-gradient(135deg, #f97316, #ea580c)`,
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3,
-        }}>
-          <Icon name="file" size={14} color="rgba(255,255,255,0.9)" />
-        </div>
-        <div style={{
-          width: 24, height: 24, borderRadius: RADIUS.full, marginRight: -4,
-          border: `1px solid ${COLORS.strokeDefault}`, overflow: "hidden",
-          background: COLORS.bgExpressiveBlue,
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
-        }}>
-          <Icon name="workOrder" size={14} color={COLORS.textInformative} />
-        </div>
-        <div style={{
-          width: 24, height: 24, borderRadius: RADIUS.full,
-          border: `1px solid ${COLORS.strokeDefault}`,
-          background: COLORS.bgSecondary,
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1,
-          fontSize: 9, fontWeight: 700, color: COLORS.textPrimary, letterSpacing: -0.3,
-        }}>
-          +2
-        </div>
-      </div>
-    </button>
   );
 };
 
@@ -806,7 +754,7 @@ const UserMessage = ({ text, isNew = false }) => {
 
 // ─── Troubleshooting Card ────────────────────────────────────────────────
 const TroubleshootingCard = ({ recommendation, sources = [] }) => (
-  <div style={{ padding: `0 ${SPACING.md}px` }}>
+  <div style={{ padding: `0 ${SPACING.md}px`, maxWidth: 600 }}>
     <div style={{
       background: COLORS.bgPrimary, border: `1px solid ${COLORS.strokeDefault}`,
       borderRadius: RADIUS["2x"], padding: SPACING.md,
@@ -851,7 +799,7 @@ const TroubleshootingCard = ({ recommendation, sources = [] }) => (
 const ResolutionPrompt = ({ yesLabel, noLabel, onYes, onNo }) => (
   <div style={{
     display: "flex", flexDirection: "column", gap: SPACING.xs,
-    padding: `0 ${SPACING.md}px`,
+    padding: `0 ${SPACING.md}px`, maxWidth: 600,
   }}>
     <ResolutionChip type="positive" label={yesLabel} onClick={onYes} />
     <ResolutionChip type="negative" label={noLabel} onClick={onNo} />
@@ -917,7 +865,7 @@ const FeedbackBar = () => {
 
 // ─── Typing Indicator ────────────────────────────────────────────────────
 const TypingIndicator = () => (
-  <div style={{ padding: `0 ${SPACING.md}px` }}>
+  <div style={{ padding: `0 ${SPACING.md}px`, maxWidth: 600 }}>
     <div style={{ display: "flex", alignItems: "center", gap: SPACING.xs, marginBottom: SPACING.sm }}>
       <CopilotOrb size={24} />
       <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.textPrimary }}>CoPilot</span>
@@ -935,7 +883,7 @@ const TypingIndicator = () => (
 
 // ─── Escalation Card ─────────────────────────────────────────────────────
 const EscalationCard = ({ expert, onRequest }) => (
-  <div style={{ padding: `0 ${SPACING.md}px` }}>
+  <div style={{ padding: `0 ${SPACING.md}px`, maxWidth: 600 }}>
     <div style={{
       background: COLORS.bgPrimaryAccent, borderRadius: RADIUS["2x"],
       padding: SPACING.md, display: "flex", flexDirection: "column", gap: 12,
@@ -976,7 +924,7 @@ const EscalationCard = ({ expert, onRequest }) => (
 
 // ─── Session Summary ─────────────────────────────────────────────────────
 const SessionSummary = ({ stepsAttempted, resolution }) => (
-  <div style={{ padding: `0 ${SPACING.md}px` }}>
+  <div style={{ padding: `0 ${SPACING.md}px`, maxWidth: 600 }}>
     <div style={{
       background: COLORS.bgPrimary, borderRadius: RADIUS["2x"],
       border: `1px solid ${COLORS.strokeDefault}`, padding: SPACING.md,
@@ -1518,7 +1466,7 @@ export default function TroubleshootingPrototype() {
     switch (msg.type) {
       case "copilot-questions":
         return (
-          <CoPilotMessage key={msg.key} onSourcesClick={() => setSourcesModalOpen(true)} isNew={msg.isNew}>
+          <CoPilotMessage key={msg.key} isNew={msg.isNew}>
             <ol style={{ margin: 0, paddingLeft: 24, display: "flex", flexDirection: "column", gap: 4 }}>
               {SCENARIO.intake.questions.map((q, i) => (
                 <li key={i} style={{ fontSize: 16, lineHeight: "24px" }}>{q}</li>
@@ -1529,7 +1477,7 @@ export default function TroubleshootingPrototype() {
 
       case "copilot-triage":
         return (
-          <CoPilotMessage key={msg.key} onSourcesClick={() => setSourcesModalOpen(true)} isNew={msg.isNew}>
+          <CoPilotMessage key={msg.key} isNew={msg.isNew}>
             <div style={{ display: "flex", flexDirection: "column", gap: SPACING.md }}>
               <span style={{ fontSize: 14, lineHeight: "20px" }}>{SCENARIO.triage.message}</span>
               <span style={{ fontSize: 14, lineHeight: "20px", fontWeight: 600 }}>{SCENARIO.triage.prompt}</span>
@@ -1547,7 +1495,7 @@ export default function TroubleshootingPrototype() {
 
       case "copilot-analysis":
         return (
-          <CoPilotMessage key={msg.key} onSourcesClick={() => setSourcesModalOpen(true)} isNew={msg.isNew}>
+          <CoPilotMessage key={msg.key} isNew={msg.isNew}>
             <span style={{ fontSize: 14, lineHeight: "20px" }}>{msg.text}</span>
           </CoPilotMessage>
         );
